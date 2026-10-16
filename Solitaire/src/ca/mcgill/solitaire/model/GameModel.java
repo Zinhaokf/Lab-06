@@ -1,20 +1,20 @@
 /*******************************************************************************
  * Solitaire
- * 
+ *
  * Copyright (C) 2025 by Martin P. Robillard
- * 
+ *
  * See: https://github.com/prmr/Solitaire
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation, either version 3 of the License, or (at your option) any later
  * version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see http://www.gnu.org/licenses/.
  *******************************************************************************/
@@ -33,11 +33,14 @@ import ca.mcgill.solitaire.cards.Suit;
 
 /**
  * Keeps track of the current state of the game and provides a facade to it.
- * 
+ *
  * The game state can logically be separated into four distinct conceptual
  * elements: the deck, the discard pile, the foundations where completed suits
  * are accumulated, and the tableau, which consists of seven piles where cards
  * fan down in sequences of alternating suit colors.
+ *
+ * This class is a Singleton: use {@link #instance()} to obtain the only
+ * instance.
  */
 public final class GameModel implements GameModelView {
 	private static final Move NULL_MOVE = new Move() {
@@ -52,6 +55,10 @@ public final class GameModel implements GameModelView {
 		@Override
 		public void undo() {} // Does nothing on purpose
 	};
+
+	// ===================== Singleton: instance duy nhất =====================
+	private static final GameModel INSTANCE = new GameModel();
+	// ==============================================================================
 
 	private final Move aDiscardMove = new Move() {
 		@Override
@@ -76,19 +83,51 @@ public final class GameModel implements GameModelView {
 	private final Foundations aFoundations = new Foundations();
 	private final Tableau aTableau = new Tableau();
 	private final List<GameModelListener> aListeners = new ArrayList<>();
-	private final PlayingStrategy aPlayingStrategy;
 
-	/**
-	 * Creates a new game model initialized to a new game.
-	 * 
-	 * @param pPlayingStrategy The strategy to use for auto-play.
-	 * @pre pPlayingStrategy != null
-	 */
+	// ===================== không còn dùng =====================
+	/*
+	private final PlayingStrategy aPlayingStrategy;
+	*/
+	// ===================== không còn là final vì constructor không nhận tham số nữa =====================
+	private PlayingStrategy aPlayingStrategy;
+	// ==========================================================================================================
+
+	// ===================== không còn dùng =====================
+	/*
 	public GameModel(PlayingStrategy pPlayingStrategy) {
 		assert pPlayingStrategy != null;
 		aPlayingStrategy = pPlayingStrategy;
 		reset();
 	}
+	*/
+	// ===================== constructor private, không tham số =====================
+	/**
+	 * Creates the single game model, initialized to a new game. Private so that
+	 * no other class can create additional instances.
+	 */
+	private GameModel() {
+		newGame();
+	}
+
+	/**
+	 * @return The only instance of the game model.
+	 */
+	public static GameModel instance() {
+		return INSTANCE;
+	}
+
+	/**
+	 * Sets the strategy to use for auto-play. Needed because the constructor
+	 * can no longer receive it.
+	 *
+	 * @param pPlayingStrategy The strategy to use for auto-play.
+	 * @pre pPlayingStrategy != null
+	 */
+	public void setPlayingStrategy(PlayingStrategy pPlayingStrategy) {
+		assert pPlayingStrategy != null;
+		aPlayingStrategy = pPlayingStrategy;
+	}
+	// ====================================================================================
 
 	/**
 	 * @return The number of cards in the foundations.
@@ -100,7 +139,7 @@ public final class GameModel implements GameModelView {
 	/**
 	 * Try to automatically make a move. This may result in nothing happening if
 	 * the auto-play strategy cannot make a decision.
-	 * 
+	 *
 	 * @return Whether a move was performed or not.
 	 */
 	public boolean tryToAutoPlay() {
@@ -111,7 +150,7 @@ public final class GameModel implements GameModelView {
 
 	/**
 	 * Registers an observer for the state of the game model.
-	 * 
+	 *
 	 * @param pListener A listener to register.
 	 * @pre pListener != null.
 	 */
@@ -126,9 +165,8 @@ public final class GameModel implements GameModelView {
 		}
 	}
 
-	/**
-	 * Restores the model to the state corresponding to the start of a new game.
-	 */
+	// ===================== không còn dùng =====================
+	/*
 	public void reset() {
 		aMoves.clear();
 		aDeck.shuffle();
@@ -137,6 +175,20 @@ public final class GameModel implements GameModelView {
 		aTableau.initialize(aDeck);
 		notifyListeners();
 	}
+	*/
+	// ===================== reset() đổi tên thành newGame() =====================
+	/**
+	 * Restores the model to the state corresponding to the start of a new game.
+	 */
+	public void newGame() {
+		aMoves.clear();
+		aDeck.shuffle();
+		aDiscard.clear();
+		aFoundations.initialize();
+		aTableau.initialize(aDeck);
+		notifyListeners();
+	}
+	// =================================================================================
 
 	/**
 	 * @return True if the game is completed.
@@ -162,7 +214,7 @@ public final class GameModel implements GameModelView {
 
 	/**
 	 * Obtain the card on top of the foundation pile pPile without removing it.
-	 * 
+	 *
 	 * @param pPile The pile to check.
 	 * @return The card on top of the pile.
 	 * @pre pPile != null && !isFoundationPileEmpty(pIndex).
@@ -274,7 +326,7 @@ public final class GameModel implements GameModelView {
 	/**
 	 * Get the sequence consisting of pCard and all the other cards above it,
 	 * in the tableau.
-	 * 
+	 *
 	 * @param pCard The bottom card of the sequence, inclusive
 	 * @return A non-empty sequence of cards.
 	 * @pre pCard != null && contains(pCard).
