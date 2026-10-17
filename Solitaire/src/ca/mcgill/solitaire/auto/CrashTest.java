@@ -34,7 +34,8 @@ public final class CrashTest {
 	 * @param pArgs Not used.
 	 */
 	public static void main(String[] pArgs) {
-		GameModel model = new GameModel(new GreedyPlayingStrategy());
+		GameModel model = GameModel.instance();
+		model.setPlayingStrategy(new GreedyPlayingStrategy());
 		for (int i = 0; i < NUMBER_OF_GAMES; i++) {
 			playGame(model);
 		}
@@ -42,7 +43,7 @@ public final class CrashTest {
 	}
 
 	private static void playGame(GameModel pModel) {
-		pModel.reset();
+		pModel.newGame();
 		boolean advanced = true;
 		while (advanced) {
 			advanced = pModel.tryToAutoPlay();

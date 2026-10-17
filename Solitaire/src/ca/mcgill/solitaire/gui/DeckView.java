@@ -64,7 +64,7 @@ class DeckView extends HBox implements GameModelListener {
 			public void handle(MouseEvent pEvent) {
 				((Button) pEvent.getSource()).setStyle(BUTTON_STYLE_NORMAL);
 				if (aModel.isDeckEmpty()) {
-					aModel.reset();
+					pModel.newGame();
 				}
 				else {
 					aModel.getDiscardMove().perform();

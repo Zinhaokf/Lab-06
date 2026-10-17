@@ -38,7 +38,8 @@ public final class Driver {
 	public static void main(String[] pArgs) {
 		int total = 0;
 		int totalWon = 0;
-		GameModel model = new GameModel(new GreedyPlayingStrategy());
+		GameModel model = GameModel.instance();
+		model.setPlayingStrategy(new GreedyPlayingStrategy());
 		for (int i = 0; i < NUMBER_OF_GAMES; i++) {
 			playGame(model);
 			int score = model.getScore();
@@ -54,7 +55,7 @@ public final class Driver {
 	}
 
 	private static void playGame(GameModel pModel) {
-		pModel.reset();
+		pModel.newGame();
 		boolean advanced = true;
 		while (advanced) {
 			advanced = pModel.tryToAutoPlay();
