@@ -1,20 +1,20 @@
 /*******************************************************************************
  * Solitaire
- * 
+ *
  * Copyright (C) 2025 by Martin P. Robillard
- * 
+ *
  * See: https://github.com/prmr/Solitaire
- * 
+ *
  * This program is free software: you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
  * Foundation, either version 3 of the License, or (at your option) any later
  * version.
- * 
+ *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with
  * this program. If not, see http://www.gnu.org/licenses/.
  *******************************************************************************/
@@ -40,11 +40,11 @@ import ca.mcgill.solitaire.testutils.StubDeck;
  * test class before each test, so the order of cards in the deck can always be
  * predicted. The cards are ordered by suit, then rank. See the Suit and 
  * Rank enumerated type for the order.
- * 
+ *
  * Because 28 cards are used to initialize the tableau from the deck, after
  * the GameModel is initialized, the card at the top of the deck is the 29th
  * card, so the Jack of Diamonds.
- * 
+ *
  * Tableau Piles (bottom -> top):
  * 1: KS
  * 2: QS JS
@@ -55,8 +55,10 @@ import ca.mcgill.solitaire.testutils.StubDeck;
  * 7: 5H 4H 3H 2H AH KD QD
  */
 public class GameModelTest {
-	
-	private final GameModel aModel = new GameModel(new GreedyPlayingStrategy());
+
+	// [CŨ] private final GameModel aModel = new GameModel(new GreedyPlayingStrategy());
+	// [MỚI] GameModel là Singleton nên lấy instance duy nhất thay vì new
+	private final GameModel aModel = GameModel.instance();
 
 	/**
 	 * Initialize the test class so that the instance of GameModel
@@ -66,14 +68,17 @@ public class GameModelTest {
 		Field deckField = GameModel.class.getDeclaredField("aDeck");
 		deckField.setAccessible(true);
 		deckField.set(aModel, new StubDeck());
-		aModel.reset();
+		// [CŨ] aModel.reset();
+		// [MỚI] reset() đã đổi tên thành newGame(); gắn lại strategy vì constructor private không nhận tham số
+		aModel.setPlayingStrategy(new GreedyPlayingStrategy());
+		aModel.newGame();
 	}
-	
+
 	@Test
 	void testGetScore_Zero() {
 		assertEquals(0, aModel.getScore());
 	}
-	
+
 	@Test
 	void testGetScore_NonZero() {
 		aModel.getCardMove(CQD, TableauPile.FIRST).perform();
@@ -85,12 +90,12 @@ public class GameModelTest {
 		aModel.getCardMove(C2H, FoundationPile.FIRST).perform();
 		assertEquals(2, aModel.getScore());
 	}
-	
+
 	@Test
 	void testListeners_OneListener() {
 		final boolean[] test = { false };
 
-		// The statement below can be replaced with: 
+		// The statement below can be replaced with:
 		// aModel.addListener(() -> test[0] = true);
 		aModel.addListener(new GameModelListener() {
 			@Override
@@ -101,7 +106,7 @@ public class GameModelTest {
 		aModel.getDiscardMove().perform();
 		assertTrue(test[0]);
 	}
-	
+
 	@Test
 	void testListeners_None() {
 		// There is no assert here. The test
@@ -128,7 +133,7 @@ public class GameModelTest {
 		assertEquals(1, pile.size());
 		assertSame(CKS, pile.peekTop());
 	}
-	
+
 	@Test
 	void testGetTableauPile_Second() {
 		CardStack pile = aModel.getTableauPile(TableauPile.SECOND);
@@ -136,7 +141,7 @@ public class GameModelTest {
 		assertSame(CJS, pile.pop());
 		assertSame(CQS, pile.pop());
 	}
-	
+
 	@Test
 	void testGetTableauPile_Third() {
 		CardStack pile = aModel.getTableauPile(TableauPile.THIRD);
@@ -145,7 +150,7 @@ public class GameModelTest {
 		assertSame(C9S, pile.pop());
 		assertSame(CTS, pile.pop());
 	}
-	
+
 	@Test
 	void testGetTableauPile_Fourth() {
 		CardStack pile = aModel.getTableauPile(TableauPile.FOURTH);
@@ -155,7 +160,7 @@ public class GameModelTest {
 		assertSame(C6S, pile.pop());
 		assertSame(C7S, pile.pop());
 	}
-	
+
 	@Test
 	void testGetTableauPile_Fifth() {
 		CardStack pile = aModel.getTableauPile(TableauPile.FIFTH);
@@ -166,7 +171,7 @@ public class GameModelTest {
 		assertSame(C2S, pile.pop());
 		assertSame(C3S, pile.pop());
 	}
-	
+
 	@Test
 	void testGetTableauPile_Sixth() {
 		CardStack pile = aModel.getTableauPile(TableauPile.SIXTH);
@@ -178,7 +183,7 @@ public class GameModelTest {
 		assertSame(CTH, pile.pop());
 		assertSame(CJH, pile.pop());
 	}
-	
+
 	@Test
 	void testGetTableauPile_Seventh() {
 		CardStack pile = aModel.getTableauPile(TableauPile.SEVENTH);
@@ -191,14 +196,14 @@ public class GameModelTest {
 		assertSame(C4H, pile.pop());
 		assertSame(C5H, pile.pop());
 	}
-	
+
 	@Test
 	void testGetSubStack_SingleCard() {
 		CardStack stack = aModel.getSubpile(CKS);
 		assertEquals(1, stack.size());
 		assertSame(CKS, stack.peekTop());
 	}
-	
+
 	@Test
 	void testGetSubStack_AllCards() {
 		CardStack stack = aModel.getSubpile(CTS);
@@ -207,7 +212,7 @@ public class GameModelTest {
 		assertSame(C9S, stack.pop());
 		assertSame(CTS, stack.pop());
 	}
-	
+
 	@Test
 	void testGetSubStack_TopTwo() {
 		CardStack stack = aModel.getSubpile(C9S);
@@ -215,14 +220,14 @@ public class GameModelTest {
 		assertSame(C8S, stack.pop());
 		assertSame(C9S, stack.pop());
 	}
-	
+
 	@Test
 	void testGetSubStack_TopOnly() {
 		CardStack stack = aModel.getSubpile(C8S);
 		assertEquals(1, stack.size());
 		assertSame(C8S, stack.pop());
 	}
-	
+
 	@Test
 	void testNullMove() {
 		Move nullMove = aModel.getNullMove();
